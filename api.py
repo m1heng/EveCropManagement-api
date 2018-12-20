@@ -38,9 +38,53 @@ class UserInfo(db.Model):
     english_alias = db.Column(db.String(50), unique = True, nullable = False)
     qq = db.Column(db.String(20), unique = True, nullable = False)
 
+'''
+decorator for login required. Normal User role
+'''
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message' : 'Token is missing!'}), 401
+
+        try: 
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = User.query.filter_by(public_id=data['public_id']).first()
+        except:
+            return jsonify({'message' : 'Token is invalid!'}), 401
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
+
+'''
+login end point.
+Return jwt token with public id encoded.
+'''
 @app.route('/auth/login')
 def login():
-    return ''
+    auth = request.authorization
+
+    if not auth or not auth.email or not auth.password:
+        return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
+
+    user = User.query.filter_by(email=auth.email).first()
+
+    if not user:
+        return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Username or Password mismatch!"'})
+
+    if check_password_hash(user.password, auth.password):
+        token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
+
+        return jsonify({'token' : token.decode('UTF-8')})
+
+    return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Username or Password mismatch!"'})
 
 '''
 register end point.
