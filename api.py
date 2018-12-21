@@ -38,6 +38,28 @@ class UserInfo(db.Model):
     english_alias = db.Column(db.String(50), unique = True, nullable = False)
     qq = db.Column(db.String(20), unique = True, nullable = False)
 
+
+class UserESI(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable = False)
+    char_name = db.Column(db.String(50), unique = True, nullable = False)
+    char_id = db.Column(db.String(50), unique =True, nullable =False)
+    refresh_token = db.Column(db.String(255), unique = True, nullable = False)
+
+class SRP(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable =False)
+    km_id = db.Column(db.String(50), unique = True, nullable = False)
+    decision = db.(db.Boolean)
+    amount = db.Column(db.Integer)
+    request_reason = db.Column(db.String(255))
+    decision_reason = db.Column(db.String(255))
+
+class FleetRecord(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    fc_char_id = db.Column(db.String(50), nullable = False)
+    
+
 '''
 decorator for login required. Normal User role
 '''
@@ -71,15 +93,17 @@ Return jwt token with public id encoded.
 def login():
     auth = request.authorization
 
-    if not auth or not auth.email or not auth.password:
+    print(auth)
+
+    if not auth or not auth.username or not auth.password:
         return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
-    user = User.query.filter_by(email=auth.email).first()
+    user = User.query.filter_by(email=auth.username).first()
 
     if not user:
         return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Username or Password mismatch!"'})
 
-    if check_password_hash(user.password, auth.password):
+    if check_password_hash(user.hashed_pass, auth.password):
         token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
 
         return jsonify({'token' : token.decode('UTF-8')})
@@ -106,6 +130,32 @@ def register():
         return jsonify({'message': 'Successfully registered'})
     except Exception as e:
         return jsonify({'message': str(e)}), 401
+
+@app.route('/auth/resetpassword', methods=['POST'])
+def resetPassword:
+    return ''
+
+@app.route('/auth/updateRole', methods=['UPDATE'])
+def updateRole():
+    return ''
+
+
+
+
+@app.route('/user/updateInfo', methods=['UPDATE'])
+def user_updateInfo():
+    #TODO: for user to update full or part of user info
+    return ''
+
+@app.route('/user/newInfo', methods=['POST'])
+def user_newInfo():
+    #TODO: for user to init user info for the first time
+    return ''
+
+
+
+
+
 
 
 if __name__ == '__main__':
