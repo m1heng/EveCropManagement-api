@@ -9,16 +9,20 @@ class User(db.Model):
     """ User Model for storing user related details """
     __tablename__ = "user"
 
+    #must be initialize at the moment of creating new user(register)
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    public_id = db.Column(db.String(100), unique=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     registered_on = db.Column(db.DateTime, nullable=False)
     admin = db.Column(db.Boolean, nullable=False, default=False)
     director = db.Column(db.Boolean, nullable=False, default=False)
-    public_id = db.Column(db.String(100), unique=True)
+    fc = db.Column(db.Boolean, nullable=False, default=False)
     password_hash = db.Column(db.String(64), nullable=False)
-    chinese_alias = db.Column(db.String(50), unique = True, nullable = False)
-    english_alias = db.Column(db.String(50), unique = True, nullable = False)
-    qq = db.Column(db.String(20), unique = True, nullable = False)
+
+    #will be updated after user's first login
+    chinese_alias = db.Column(db.String(50), unique = True)
+    english_alias = db.Column(db.String(50), unique = True)
+    qq = db.Column(db.String(20), unique = True)
 
 
     @property
@@ -42,7 +46,7 @@ class User(db.Model):
             payload = {
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
                 'iat': datetime.datetime.utcnow(),
-                'sub': user_public_id
+                'pid': user_public_id
             }
             return jwt.encode(payload, key, algorithm='HS256')
         except Exception as e:
@@ -51,13 +55,13 @@ class User(db.Model):
     @staticmethod
     def decode_auth_token(auth_token):
         """
-            Decodes the auth token
+            Decodes public id from the auth token, and validate token
             :param auth_token:
             :return: string
         """
         try:
             payload = jwt.decode(auth_token, key)
-            return payload['sub']
+            return payload['pid']
         except jwt.ExpiredSignatureError:
             return 'Signature expired. Please log in again.'
         except jwt.InvalidTokenError:

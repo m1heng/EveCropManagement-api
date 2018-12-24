@@ -41,3 +41,21 @@ class User(Resource):
         else:
             return user
 
+    def post(self):
+        """
+            initialize user info 
+        """
+        data = request.json
+        return create_user_info(public_id, data)
+
+
+    def put(self):
+        """
+            update user info
+        """
+        data = request.json
+        return update_user_info(public_id, data)
+
+    def delete(self):
+        return ""
+        

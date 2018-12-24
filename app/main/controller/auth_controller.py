@@ -22,4 +22,11 @@ class Register(Resource):
     def post(self):
         post_data = request.json
         return Auth.register_user(data=post_data)
+
+@api.route('/resetpassword')
+class Resetpassword(Resource):
+    def post(self):
+        post_data =request.json
+        return Auth.resetpassword(data=post_data)
+
     
