@@ -36,36 +36,13 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    @staticmethod
-    def encode_auth_token(user_public_id):
-        """
-            Generates the Auth Token
-            :return: string
-        """
-        try:
-            payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
-                'iat': datetime.datetime.utcnow(),
-                'pid': user_public_id
-            }
-            return jwt.encode(payload, key, algorithm='HS256')
-        except Exception as e:
-            return e
-
-    @staticmethod
-    def decode_auth_token(auth_token):
-        """
-            Decodes public id from the auth token, and validate token
-            :param auth_token:
-            :return: string
-        """
-        try:
-            payload = jwt.decode(auth_token, key)
-            return payload['pid']
-        except jwt.ExpiredSignatureError:
-            return 'Signature expired. Please log in again.'
-        except jwt.InvalidTokenError:
-            return 'Invalid token. Please log in again.'
+    def to_token(self):
+        payload  = {
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
+            'iat': datetime.datetime.utcnow(),
+            'pid': self.user_public_id            
+        }
+        return jwt.encode(payload, key, algorithm='HS256')
 
     def __repr__(self):
         return "<User '{}'>".format(self.email)
