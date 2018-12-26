@@ -8,7 +8,7 @@ from app.main.service.auth_service import Auth
 from app.main.model.user import User
 
 
-def vaildate_taoken(request_header):
+def vaildate_token(request_header):
     response_body = {
         'status' : 'fail',
         'message' : ''
@@ -40,10 +40,11 @@ current_user must be added as a parameter to wrapped function
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        current_user, status = vaildate_taoken(request.headers)
+        current_user, status = vaildate_token(request.headers)
         if not isinstance(current_user, User):
             return current_user, status
-        return 
+
+        return f(current_user, *args, **kwargs)
 
     return decorated
 
@@ -51,22 +52,18 @@ def login_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        data, status = Auth.get_current_user(request)
-        token = data.get('data')
+        current_user, status = vaildate_token(request.headers)
+        if not isinstance(current_user, User):
+            return current_user, status
 
-        if not token:
-            return data, status
-
-        admin = token.get('admin')
-
-        if not admin:
-            response = {
-                'status' : 'fail',
-                'message' : 'admin token required'
+        if not current_user.admin:
+            response_body = {
+                'status' = 'fail',
+                'message' = 'admin role required'
             }
-            return response, 401
+            return response_body, 401
 
-        return f(*args, **kwargs)
+        return f(current_user,*args, **kwargs)
 
     return decorated
 
@@ -74,21 +71,17 @@ def admin_required(f):
 def dicrector_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        data, status = Auth.get_current_user(request)
-        token = data.get('data')
+        current_user, status = vaildate_token(request.headers)
+        if not isinstance(current_user, User):
+            return current_user, status
 
-        if not token:
-            return data, status
-
-        dicrector = token.get('dicrector')
-
-        if not dicrector:
-            response = {
-                'status' : 'fail',
-                'message' : 'dicrector token required'
+        if not current_user.director:
+            response_body = {
+                'status' = 'fail',
+                'message' = 'director role required'
             }
-            return response, 401
+            return response_body, 401
 
-        return f(*args, **kwargs)
+        return f(current_user,*args, **kwargs)
 
     return decorated

@@ -2,6 +2,7 @@ from flask import request
 from flask_restplus import Resource
 
 from app.main.service.auth_service import Auth
+from app.main.util.decorator import 
 from ..util.dto import AuthDto
 
 api = AuthDto.api
@@ -25,6 +26,7 @@ class Register(Resource):
 
 @api.route('/resetpassword')
 class Resetpassword(Resource):
+    @
     def post(self):
         post_data =request.json
         return Auth.resetpassword(data=post_data)
