@@ -9,7 +9,7 @@ def login_user(json_data):
         # fetch the user data
         user = User.query.filter_by(email=json_data.get('email')).first()
         if user and user.check_password(json_data.get('password')):
-            auth_token = User.encode_auth_token(user.id)
+            auth_token = user.to_token()
             if auth_token:
                 response_object = {
                     'status': 'success',
@@ -68,6 +68,55 @@ def register_user(json_data):
         }
         return response_body, 500
 
+"""
+json_data: request body 
+current_user: user object from login decrator
+"""
+def reset_pass(json_data, current_user):
+    old_pass = json_data['old_pass']
+    new_pass = json_data['new_pass']
+
+    if not current_user.check_password(old_pass):
+        response_body = {
+            'status': 'fail',
+            'message': 'old password not match'
+        }
+        return response_body, 401
+
+    current_user.password = new_pass
+    db.session.commit()
+    response_body = {
+        'status': 'success',
+        'message': 'password resetted. please log in'
+    }
+    return response_body, 200
+
+"""
+json_data: role name and it's new value
+target_user_pid: target user's publid id
+"""
+def role_operation(json_data,target_user_pid):
+
+    target_user = User.query.filter_by(public_id = target_user_pid).first()
+
+    if not target_user:
+        response_body = {
+            'status' : 'fail',
+            'message' : 'target user not exists'
+        }
+        return response_body, 404
+
+    op = json_data['director']
+
+    if op :
+        target_user.director = op
+
+
+    response_body = {
+        'status': 'success',
+        'message' : 'tagert user role is changed'
+    }
+    return response_body, 200
 
 
 def get_current_user(new_request):

@@ -1,8 +1,8 @@
 from flask import request
 from flask_restplus import Resource
 
-from app.main.service.auth_service import Auth
-from app.main.util.decorator import 
+from app.main.service.auth_service import login_user, register_user, reset_pass, role_operation
+from app.main.util.decorator import login_required, admin_required
 from ..util.dto import AuthDto
 
 api = AuthDto.api
@@ -15,20 +15,26 @@ class Login(Resource):
     def post(self):
         # get the post data
         post_data = request.json
-        return Auth.login_user(data=post_data)
+        return login_user(post_data)
 
 @api.route('/register')
 class Register(Resource):
     @api.expect(user_auth, validate=True)
     def post(self):
         post_data = request.json
-        return Auth.register_user(data=post_data)
+        return register_user(post_data)
 
 @api.route('/resetpassword')
 class Resetpassword(Resource):
-    @
-    def post(self):
-        post_data =request.json
-        return Auth.resetpassword(data=post_data)
+    @login_required
+    def put(current_user, self):
+        data =request.json
+        return reset_pass(data, current_user)
+
+@api.route('/roleoperation/<pid>'):
+    @admin_required
+    def put(self):
+        data = request.json
+        return role_operation(data, pid)
 
     

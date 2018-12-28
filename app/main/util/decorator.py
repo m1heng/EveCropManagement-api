@@ -4,7 +4,6 @@ import jwt
 from flask import request
 
 from ..config import key
-from app.main.service.auth_service import Auth
 from app.main.model.user import User
 
 
@@ -21,10 +20,10 @@ def vaildate_token(request_header):
     token = request_header['x-access-token']
 
     try:
-        pid = jwt.decode(token, key)
+        pid = jwt.decode(token, key)['pid']
         current_user = User.query.filter_by(public_id = pid).first()
     except Exception as e:
-        response_body['message'] = e
+        response_body['message'] = str(e)
         return response_body, 401
 
     if not current_user:
@@ -58,8 +57,8 @@ def admin_required(f):
 
         if not current_user.admin:
             response_body = {
-                'status' = 'fail',
-                'message' = 'admin role required'
+                'status' : 'fail',
+                'message' : 'admin role required'
             }
             return response_body, 401
 
@@ -77,8 +76,8 @@ def dicrector_required(f):
 
         if not current_user.director:
             response_body = {
-                'status' = 'fail',
-                'message' = 'director role required'
+                'status' : 'fail',
+                'message' : 'director role required'
             }
             return response_body, 401
 

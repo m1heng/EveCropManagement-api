@@ -40,7 +40,7 @@ class User(db.Model):
         payload  = {
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=45),
             'iat': datetime.datetime.utcnow(),
-            'pid': self.user_public_id            
+            'pid': self.public_id            
         }
         return jwt.encode(payload, key, algorithm='HS256')
 
